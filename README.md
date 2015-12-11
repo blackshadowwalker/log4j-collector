@@ -1,4 +1,4 @@
-# flume-agent
+# log4j collector (Server)
 
 Author: Black
 
@@ -8,8 +8,7 @@ log4j socket 集中收集日志 服务端，并将日志写入文件,允许自�
 
 ![screen](doc/20151204161519.png)
 
-
-## log4j clien (Your Java App)
+## log4j client (Your Java App)
 
 log4j.xml
 
