@@ -18,12 +18,18 @@
         </layout>
     </appender>
 
-    <appender name="flume" class="org.apache.flume.clients.log4jappender.Log4jAppender">
-        <param name="hostname" value="172.16.1.188"/>
-        <param name="port" value="41414"/>
-        <param name="Threshold" value="DEBUG" />
+    <appender name="CENTER-FLUME" class="org.apache.log4j.AsyncAppender">
+        <param name="Blocking" value="false"/>
+        <param name="BufferSize" value="20"/>
+        <appender-ref ref="flume"/>
+    </appender>
+    <appender name="flume" class="org.apache.log4j.client.FlumeAppender">
+        <param name="application" value="${project.name}"/>
+        <param name="hostname" value="${flume.host}" />
+        <param name="port" value="${flume.port}" />
+        <param name="reconnectionDelay" value="10000"/>
         <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss.SSS} [%-5p] [%X{app}] [%X{ip}]  [%t] [%l]  %m%n" />
+            <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss,SSS} [%-5p] [%t] [%l]  %m%n"/>
         </layout>
     </appender>
 
@@ -31,7 +37,7 @@
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="INFO" />
         <param name="Append" value="true" />
-        <param name="File" value="/data/flume-agent/logs/${project.name}.log" />
+        <param name="File" value="/data/${project.name}/logs/${project.name}.log" />
         <param name="DatePattern" value="'.'yyyy-MM-dd'.log'"></param>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss.SSS} [%-5p] [%X{app}] [%X{ip}] [%t] [%l]  %m%n" />
@@ -46,7 +52,7 @@
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="INFO" />
         <param name="Append" value="true" />
-        <param name="File" value="/data/flume-agent/logs/${project.name}-api.log" />
+        <param name="File" value="/data/${project.name}/logs/${project.name}-api.log" />
         <param name="DatePattern" value="'.'yyyy-MM-dd'.log'"></param>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss.SSS} [%-5p] [%X{ip}] [%t] [%l]  %m%n" />
@@ -61,7 +67,7 @@
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="INFO" />
         <param name="Append" value="true" />
-        <param name="File" value="/data/flume-agent/logs/${project.name}-m.log" />
+        <param name="File" value="/data/${project.name}/logs/${project.name}-m.log" />
         <param name="DatePattern" value="'.'yyyy-MM-dd'.log'"></param>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss.SSS} [%-5p] [%X{ip}] [%t] [%l]  %m%n" />
@@ -76,7 +82,7 @@
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="INFO" />
         <param name="Append" value="true" />
-        <param name="File" value="/data/flume-agent/logs/${project.name}-www.log" />
+        <param name="File" value="/data/${project.name}/logs/${project.name}-www.log" />
         <param name="DatePattern" value="'.'yyyy-MM-dd'.log'"></param>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss.SSS} [%-5p] [%X{ip}] [%t] [%l]  %m%n" />
@@ -91,7 +97,7 @@
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="ERROR" />
         <param name="Append" value="true" />
-        <param name="File" value="/data/flume-agent/logs/${project.name}-error.log" />
+        <param name="File" value="/data/${project.name}/logs/${project.name}-error.log" />
         <param name="DatePattern" value="'.'yyyy-MM-dd'.log'" />
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss.SSS} [%-5p] [%X{app}] [%X{ip}] [%t] [%l]  %m%n" />
@@ -106,7 +112,7 @@
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="ERROR" />
         <param name="Append" value="true" />
-        <param name="File" value="/data/flume-agent/logs/${project.name}-api-error.log" />
+        <param name="File" value="/data/${project.name}/logs/${project.name}-api-error.log" />
         <param name="DatePattern" value="'.'yyyy-MM-dd'.log'" />
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss.SSS} [%-5p] [%X{ip}] [%t] [%l]  %m%n" />
@@ -121,7 +127,7 @@
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="ERROR" />
         <param name="Append" value="true" />
-        <param name="File" value="/data/flume-agent/logs/${project.name}-m-error.log" />
+        <param name="File" value="/data/${project.name}/logs/${project.name}-m-error.log" />
         <param name="DatePattern" value="'.'yyyy-MM-dd'.log'" />
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss.SSS} [%-5p] [%t] [%l]  %m%n" />
@@ -147,9 +153,9 @@
         </filter>
     </appender>
 
-    <appender name="EMAIL_ROLLING_FILE_ERROR" class="com.log4j.email.EmailDailyRollingFileAppender">
+    <appender name="EMAIL_ROLLING_FILE_ERROR" class="org.apache.log4j.email.EmailDailyRollingFileAppender">
         <param name="Encoding" value="UTF-8" />
-        <param name="Threshold" value="INFO" />
+        <param name="Threshold" value="ERROR" />
         <param name="Append" value="true" />
         <param name="File" value="/data/${project.name}/logs/${project.name}-error.html" />
         <param name="DatePattern" value="'.'yyyy-MM-dd'.html'" />
@@ -160,10 +166,10 @@
         <param name="To" value="username&lt;user1@163.com&gt;,username&lt;user2@163.com&gt;" />
         <param name="SmtpUsername" value="logSender" />
         <param name="SmtpPassword" value="vsdfsfsdavb232dws" />
-        <triggeringPolicy class="com.log4j.email.EnvTriggeringEventEvaluator">
+        <triggeringPolicy class="org.apache.log4j.email.EnvTriggeringEventEvaluator">
             <param name="env" value="${package.environment}" /><!-- 线上环境才发送邮件 -->
         </triggeringPolicy>
-        <layout class="com.log4j.FormatHTMLLayout">
+        <layout class="org.apache.log4j.FormatHTMLLayout">
             <param name="title" value="${jobname}-错误日志" />
             <param name="encoding" value="utf-8"/>
         </layout>
@@ -173,7 +179,7 @@
         </filter>
     </appender>
 
-    <appender name="${project.name}-api-error-email" class="com.log4j.email.EmailDailyRollingFileAppender">
+    <appender name="${project.name}-api-error-email" class="org.apache.log4j.email.EmailDailyRollingFileAppender">
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="ERROR" />
         <param name="Append" value="true" />
@@ -186,10 +192,10 @@
         <param name="To" value="username&lt;user1@163.com&gt;,username&lt;user2@163.com&gt;" />
         <param name="SmtpUsername" value="logSender" />
         <param name="SmtpPassword" value="vsdfsfsdavb232dws" />
-        <triggeringPolicy class="com.log4j.email.EnvTriggeringEventEvaluator">
+        <triggeringPolicy class="org.apache.log4j.email.EnvTriggeringEventEvaluator">
             <param name="env" value="${package.environment}" /><!-- 线上环境才发送邮件 -->
         </triggeringPolicy>
-        <layout class="com.log4j.FormatHTMLLayout">
+        <layout class="org.apache.log4j.FormatHTMLLayout">
             <param name="title" value="${jobname}-错误日志" />
             <param name="encoding" value="utf-8"/>
         </layout>
@@ -199,7 +205,7 @@
         </filter>
     </appender>
 
-    <appender name="${project.name}-m-error-email" class="com.log4j.email.EmailDailyRollingFileAppender">
+    <appender name="${project.name}-m-error-email" class="org.apache.log4j.email.EmailDailyRollingFileAppender">
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="ERROR" />
         <param name="Append" value="true" />
@@ -212,10 +218,10 @@
         <param name="To" value="username&lt;user1@163.com&gt;,username&lt;user2@163.com&gt;" />
         <param name="SmtpUsername" value="logSender" />
         <param name="SmtpPassword" value="vsdfsfsdavb232dws" />
-        <triggeringPolicy class="com.log4j.email.EnvTriggeringEventEvaluator">
+        <triggeringPolicy class="org.apache.log4j.email.EnvTriggeringEventEvaluator">
             <param name="env" value="${package.environment}" /><!-- 线上环境才发送邮件 -->
         </triggeringPolicy>
-        <layout class="com.log4j.FormatHTMLLayout">
+        <layout class="org.apache.log4j.FormatHTMLLayout">
             <param name="title" value="${jobname}-错误日志" />
             <param name="encoding" value="utf-8"/>
         </layout>
@@ -225,7 +231,7 @@
         </filter>
     </appender>
 
-    <appender name="${project.name}-www-error-email" class="com.log4j.email.EmailDailyRollingFileAppender">
+    <appender name="${project.name}-www-error-email" class="org.apache.log4j.email.EmailDailyRollingFileAppender">
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="ERROR" />
         <param name="Append" value="true" />
@@ -238,10 +244,10 @@
         <param name="To" value="username&lt;user1@163.com&gt;,username&lt;user2@163.com&gt;" />
         <param name="SmtpUsername" value="logSender" />
         <param name="SmtpPassword" value="vsdfsfsdavb232dws" />
-        <triggeringPolicy class="com.log4j.email.EnvTriggeringEventEvaluator">
+        <triggeringPolicy class="org.apache.log4j.email.EnvTriggeringEventEvaluator">
             <param name="env" value="${package.environment}" /><!-- 线上环境才发送邮件 -->
         </triggeringPolicy>
-        <layout class="com.log4j.FormatHTMLLayout">
+        <layout class="org.apache.log4j.FormatHTMLLayout">
             <param name="title" value="${jobname}-错误日志" />
             <param name="encoding" value="utf-8"/>
         </layout>
@@ -275,12 +281,11 @@
         </layout>
     </appender>
 
-    <appender name="druid" class="org.apache.log4j.RollingFileAppender">
+    <appender name="druid" class="org.apache.log4j.DailyRollingFileAppender">
         <param name="Encoding" value="UTF-8" />
         <param name="Threshold" value="DEBUG" />
         <param name="Append" value="true" />
-        <param name="MaxFileSize" value="50MB" />
-        <param name="maxBackupIndex" value="99999" />
+        <param name="DatePattern" value="'.'yyyy-MM-dd'.log'" />
         <param name="File" value="/data/${project.name}/logs/${project.name}-druid.log" />
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-d{yyyy/MM/dd HH:mm:ss.SSS} [%X{app}] [%X{ip}] [%-5p] [%t] %m%n" />
@@ -339,7 +344,7 @@
         <appender-ref ref="ROLLING_FILE" />
         <appender-ref ref="ROLLING_FILE_ERROR" />
         <appender-ref ref="EMAIL_ROLLING_FILE_ERROR" />
-        <!--<appender-ref ref="async" />-->
+        <appender-ref ref="CENTER-FLUME" />
     </root>
 
 </log4j:configuration>

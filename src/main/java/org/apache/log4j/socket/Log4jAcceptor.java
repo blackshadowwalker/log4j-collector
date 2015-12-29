@@ -1,5 +1,6 @@
-package com.log4j.socket;
+package org.apache.log4j.socket;
 
+import org.apache.log4j.Log4jClient;
 import org.apache.log4j.Logger;
 
 import java.net.BindException;

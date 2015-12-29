@@ -1,7 +1,5 @@
-package com.log4j.socket;
+package org.apache.log4j;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
 import org.apache.log4j.spi.LoggingEvent;
 
 import java.io.EOFException;
@@ -63,15 +61,14 @@ public class Log4jClient implements Runnable {
                 String application = event.getProperty("application");
                 MDC.put("app", application);
                 Logger loggerApp = Logger.getRootLogger().getLoggerRepository().getLogger(application);
-                if (loggerApp != null) {
+                if (loggerApp != null && loggerApp.aai!=null) {
                     loggerApp.callAppenders(event);
                 }
                 Logger logger = Logger.getRootLogger().getLoggerRepository().getLogger(event.getLoggerName());
-                if (logger != null) {
+                if (logger != null && logger.aai!=null) {
                     logger.callAppenders(event);
-                } else {
-                    log.callAppenders(event);
                 }
+                log.callAppenders(event);
             } catch (EOFException e) {
                 log.error("EOFException " + clientHost, e);
                 close();

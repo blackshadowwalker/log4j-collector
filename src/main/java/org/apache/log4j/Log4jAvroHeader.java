@@ -1,4 +1,4 @@
-package com.log4j;
+package org.apache.log4j;
 
 import java.util.Locale;
 

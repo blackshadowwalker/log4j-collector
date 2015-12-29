@@ -1,11 +1,9 @@
-package com.log4j.mdns;
+package org.apache.log4j.mdns;
 
 import org.apache.log4j.net.SocketAppender;
 
 import javax.jmdns.JmDNS;
-import javax.jmdns.ServiceInfo;
 import javax.jmdns.impl.JmDNSImpl;
-import javax.jmdns.impl.ServiceInfoImpl;
 import java.net.InetAddress;
 
 /**

@@ -1,4 +1,4 @@
-package com.log4j.socket;
+package org.apache.log4j.socket;
 
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
@@ -138,7 +138,9 @@ public class Log4jServer implements Log4jServerMBean {
         CommandLine cmd = parser.parse(options, args);
         String log4jFile = cmd.getOptionValue("f");
         String name = cmd.getOptionValue("n");
-        log4jServer.name = name;
+        if(name!=null) {
+            log4jServer.name = name;
+        }
         String p = cmd.getOptionValue("p");
         Integer port = (p!=null && !p.trim().isEmpty())? Integer.parseInt(p) : null;
         Set<String> argSet = new HashSet<String>();

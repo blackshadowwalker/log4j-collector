@@ -1,4 +1,4 @@
-package com.log4j.email;
+package org.apache.log4j.email;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;

@@ -1,4 +1,4 @@
-package com.log4j.socket;
+package org.apache.log4j.socket;
 
 /**
  * Created by karl on 2015/9/14.

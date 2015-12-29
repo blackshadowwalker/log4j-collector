@@ -44,6 +44,8 @@ log4j.xml
 
 ## java run:
 
+  vi bin/start/sh `set ff=unix` 
+  
   `bin/start.sh`
 
 ## docker run

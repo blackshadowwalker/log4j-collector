@@ -6,12 +6,13 @@
 
     <groupId>org.apache.logging.log4j</groupId>
     <artifactId>log4j-collector</artifactId>
-    <version>0.0.3-${buildTimestamp}</version>
+    <version>0.1.0-${buildTimestamp}</version>
 
-    <name>myAppName</name>
+    <name>longdai</name>
     <packaging>jar</packaging>
 
     <properties>
+        <app.name>longdai</app.name>
         <package.environment>dohko</package.environment>
         <jobname>log4j.${project.name}.com</jobname>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,6 +22,8 @@
         <docker.host>http://172.16.0.14:2375</docker.host>
         <docker.image.repo>${docker.registry}/${jobname}</docker.image.repo>
         <docker.image.tag>${project.version}</docker.image.tag>
+        <flume.host>172.16.0.17</flume.host>
+        <flume.port>1234</flume.port>
     </properties>
 
     <build>
@@ -132,7 +135,7 @@
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
                             <mainClass>
-                                com.log4j.socket.Log4jServer
+                                org.apache.log4j.socket.Log4jServer
                             </mainClass>
                         </manifest>
                     </archive>
@@ -194,7 +197,7 @@
                                 <configuration>
                                     <transformers>
                                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                            <mainClass>com.log4j.socket.Log4jServer</mainClass>
+                                            <mainClass>org.apache.log4j.socket.Log4jServer</mainClass>
                                         </transformer>
                                     </transformers>
                                 </configuration>
@@ -301,6 +304,11 @@
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
             <version>1.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flume.flume-ng-clients</groupId>
+            <artifactId>flume-ng-log4jappender</artifactId>
+            <version>1.6.0</version>
         </dependency>
     </dependencies>
 

@@ -1,4 +1,4 @@
-package com.log4j.mdns;
+package org.apache.log4j.mdns;
 
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;

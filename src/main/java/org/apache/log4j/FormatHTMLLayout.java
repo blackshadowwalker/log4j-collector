@@ -1,4 +1,4 @@
-package com.log4j;
+package org.apache.log4j;
 
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
