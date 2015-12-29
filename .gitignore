@@ -1,1 +1,19 @@
-.project.classpathtarget.settings*.svn*.svn*.iml.ideabak*.lognode_modules.build.minifyPIDdependency-reduced-pom.xml
+.project
+.classpath
+target
+.settings
+
+*.svn*
+.svn
+*.iml
+.idea
+bak
+*.log
+
+node_modules
+.build
+.minify
+
+PID
+
+dependency-reduced-pom.xml
