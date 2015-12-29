@@ -93,7 +93,11 @@ public class FlumeAppender extends AppenderSkeleton {
 
         //client created first time append is called.
         Map<String, String> hdrs = new HashMap<String, String>();
-        hdrs.put("flume.client.log4j.application", application);
+        String app = event.getProperty("application");
+        if (app==null){
+            app = application;
+        }
+        hdrs.put("flume.client.log4j.application", app);
         hdrs.put(Log4jAvroHeaders.LOGGER_NAME.toString(), event.getLoggerName());
         hdrs.put(Log4jAvroHeaders.TIMESTAMP.toString(), String.valueOf(event.timeStamp));
         hdrs.put("flume.client.log4j.date", DATE_FORMAT.format(new Date(event.timeStamp)));
