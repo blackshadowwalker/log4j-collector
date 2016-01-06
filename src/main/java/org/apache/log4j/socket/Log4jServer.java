@@ -3,6 +3,7 @@ package org.apache.log4j.socket;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.xml.DOMConfigurator;
 
 import javax.management.MBeanServer;
@@ -24,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Created by karl on 2015/8/25.
  */
 public class Log4jServer implements Log4jServerMBean {
-    private static Logger log = Logger.getLogger(Log4jServer.class);
 
     public static String CONFIG_PATH = "conf/";
     public static String LOG4J_XML = "log4j.xml";
@@ -52,7 +52,7 @@ public class Log4jServer implements Log4jServerMBean {
             }
         }
         if(file.exists()){
-            log.info("loading log4j conf " + file.getAbsolutePath());
+            LogLog.debug("loading log4j conf " + file.getAbsolutePath());
             String log4jConf = file.getName();
             if(log4jConf.endsWith(".xml")){
                 DOMConfigurator.configureAndWatch(file.getAbsolutePath(), 60);
@@ -98,24 +98,26 @@ public class Log4jServer implements Log4jServerMBean {
             FileLock fileLock = channel.tryLock();
 
             if (fileLock != null) {
-                log.info(name + " write pid " + pid + " to " + file.getAbsolutePath());
+                LogLog.debug(name + " write pid " + pid + " to " + file.getAbsolutePath());
                 fout.write(pid.getBytes());
                 if (!mbs.isRegistered(objectName)) {
                     if(port!=null && port>1024){
                         log4jAcceptor.setPort(port);
                     }
                     mbs.registerMBean(log4jServer, objectName);
-                    loadLog4jConfig(log4jFile);
+                    if(log4jFile!=null) {
+                        loadLog4jConfig(log4jFile);
+                    }
                     log4jAcceptor.start();
                     latch.await();
-                    log.info("============= exit ===============");
+                    LogLog.warn("============= exit ===============");
                 } else {
-                    log.info(name + " is running");
+                    LogLog.warn(name + " is running");
                 }
                 fileLock.release();
                 fileLock.close();
             }else{
-                System.out.println(name + " already started at " + log4jAcceptor.getPort());
+                LogLog.warn(name + " already started at " + log4jAcceptor.getPort());
             }
             channel.close();
             fout.close();
@@ -124,7 +126,7 @@ public class Log4jServer implements Log4jServerMBean {
         }
     }
 
-    private static Log4jServer log4jServer = new Log4jServer();
+    private static Log4jServer log4jServer;
 
     public static void main(String[] args) throws Exception{
         Options options = new Options();
@@ -138,6 +140,7 @@ public class Log4jServer implements Log4jServerMBean {
         CommandLine cmd = parser.parse(options, args);
         String log4jFile = cmd.getOptionValue("f");
         String name = cmd.getOptionValue("n");
+        log4jServer = new Log4jServer();
         if(name!=null) {
             log4jServer.name = name;
         }

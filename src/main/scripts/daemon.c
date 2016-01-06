@@ -26,11 +26,7 @@ void init_daemon(void)
 	else if(pid< 0)
 		exit(1);//fork失败，退出
 	//是第二子进程，继续
-	//第二子进程不再是会话组长
-	for(i=0;i< NOFILE;++i)//关闭打开的文件描述符
-		close(i);
 	//chdir("/tmp");//改变工作目录到/tmp
-	umask(0);//重设文件创建掩模
 	return;
 }
 
@@ -51,20 +47,27 @@ int main(int argn, char** argv)
     {
 		init_daemon();//初始化为Daemon
 		openlog("log4j-agent", LOG_PID, LOG_USER);
-		syslog(LOG_INFO, "log4j-agent started.");
+		syslog(LOG_INFO, "log4j-agent starting ...");
 		signal(SIGTERM, sig_term);
-		char *p[argn + 1];
+		char *p[argn];
 		int j=0;
-		for(j=0; j<argn+1; j++){
+		for(j=0; j < argn; j++){
 			p[j] = 0;
 		}
 		int i=1;
-		for(i=1; i<argn; i++){
+		for(i=1; i < argn; i++){
 			p[i-1] = argv[i];
 		}
-		for(j=0; j<argn+1; j++){
-			printf("%s \n", p[j]);
+		printf("execvp:");
+		for(j=0; j < argn-1; j++){
+			printf(" %s", p[j]);
 		}
+		printf("\n");
+
+        //第二子进程不再是会话组长
+        for(i=0;i< NOFILE;++i)//关闭打开的文件描述符
+            close(i);
+        umask(0);//重设文件创建掩模
 		int ret = execvp(argv[1], p);
 		if (ret<0){
 			fprintf(stderr,"execl failed:%s", strerror(errno));

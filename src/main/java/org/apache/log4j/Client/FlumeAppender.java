@@ -14,6 +14,7 @@ import org.apache.flume.FlumeException;
 import org.apache.flume.api.RpcClient;
 import org.apache.flume.api.RpcClientConfigurationConstants;
 import org.apache.flume.api.RpcClientFactory;
+import org.apache.flume.api.ThriftRpcClient;
 import org.apache.flume.clients.log4jappender.Log4jAvroHeaders;
 import org.apache.flume.event.EventBuilder;
 import org.apache.log4j.AppenderSkeleton;
@@ -22,6 +23,9 @@ import org.apache.log4j.spi.LoggingEvent;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -29,6 +33,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -46,8 +53,10 @@ public class FlumeAppender extends AppenderSkeleton {
     private boolean avroReflectionEnabled;
     private String avroSchemaUrl;
     private volatile Connector connector;
-
+    private String clientIP;
+    private Integer localPort = 31234;
     RpcClient rpcClient = null;
+    private static AtomicLong rpcReconnectTimes = new AtomicLong(0);
 
 //    private String dateFormat = "yyyy-MM-dd HH:mm:ss.SSS";
     private String dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
@@ -88,9 +97,13 @@ public class FlumeAppender extends AppenderSkeleton {
      * or the hostname and port were not setup, there was a timeout, or there
      * was a connection error.
      */
+
     @Override
     public synchronized void append(LoggingEvent event) throws FlumeException{
-
+        if (connector!=null && connector.connecting){
+            LogLog.debug("rpcClient#" + rpcReconnectTimes.get() + " is connecting.");
+            return ;
+        }
         //client created first time append is called.
         Map<String, String> hdrs = new HashMap<String, String>();
         String app = event.getProperty("application");
@@ -98,6 +111,7 @@ public class FlumeAppender extends AppenderSkeleton {
             app = application;
         }
         hdrs.put("flume.client.log4j.application", app);
+        hdrs.put("flume.client.log4j.clientIP", clientIP);
         hdrs.put(Log4jAvroHeaders.LOGGER_NAME.toString(), event.getLoggerName());
         hdrs.put(Log4jAvroHeaders.TIMESTAMP.toString(), String.valueOf(event.timeStamp));
         hdrs.put("flume.client.log4j.date", DATE_FORMAT.format(new Date(event.timeStamp)));
@@ -132,7 +146,7 @@ public class FlumeAppender extends AppenderSkeleton {
                 fireConnector();
             }
         } catch (EventDeliveryException e) {
-            LogLog.debug("Detected problem with EventDeliveryException: " + e.getCause());
+            LogLog.warn("rpcClient#" + rpcReconnectTimes.get() + " Detected problem with EventDeliveryException: " + e.getMessage() + "--" + e.getCause() );
             fireConnector();
             if (unsafeMode) {
                 return;
@@ -190,11 +204,7 @@ public class FlumeAppender extends AppenderSkeleton {
         try{
             if(connector != null) {
                 connector.interrupt = true;
-                synchronized (reconnectObject) {
-                    reconnectObject.notifyAll();
-                }
                 connector = null;
-                reconnectObject = null;
             }
         }catch (Exception e){
             LogLog.error("connector.interrupt", e);
@@ -202,10 +212,10 @@ public class FlumeAppender extends AppenderSkeleton {
         // Any append calls after this will result in an Exception.
         if (rpcClient != null) {
             try {
-                LogLog.warn("appender#close close... rpcClient " + rpcClient);
+                LogLog.warn("appender#close close... rpcClient#" + rpcReconnectTimes.get());
                 rpcClient.close();
             } catch (FlumeException ex) {
-                LogLog.error("Error while trying to close RpcClient.", ex);
+                LogLog.error("Error while trying to close RpcClient#" + rpcReconnectTimes.get(), ex);
                 if (unsafeMode) {
                     return;
                 }
@@ -280,10 +290,13 @@ public class FlumeAppender extends AppenderSkeleton {
         this.reconnectionDelay = reconnectionDelay;
     }
 
+    public void setMaxIoWorkers(long maxIoWorkers) {
+        this.maxIoWorkers = maxIoWorkers;
+    }
 
     private Properties props = new Properties();
     @Override
-    public void activateOptions() throws FlumeException {
+    public void activateOptions(){
         DATE_FORMAT = new SimpleDateFormat(dateFormat);
         props.setProperty(RpcClientConfigurationConstants.CONFIG_HOSTS, "h1");
         props.setProperty(RpcClientConfigurationConstants.CONFIG_HOSTS_PREFIX + "h1", hostname + ":" + port);
@@ -293,6 +306,15 @@ public class FlumeAppender extends AppenderSkeleton {
         if (layout != null) {
             layout.activateOptions();
         }
+        try {
+            InetAddress local = InetAddress.getLocalHost();
+            clientIP = local.getHostAddress();
+            if (localPort!=null && localPort > 1024) {
+//                props.setProperty("localAddress", new InetSocketAddress(local, localPort)));
+            }
+        }catch (Exception e){
+            clientIP = "unknown";
+        }
         fireConnector();
     }
 
@@ -300,39 +322,48 @@ public class FlumeAppender extends AppenderSkeleton {
      * Make it easy to reconnect on failure
      * @throws org.apache.flume.FlumeException
      */
-    private synchronized void reconnect() throws FlumeException {
-        try{
-            if (rpcClient!=null) {
-                if(rpcClient.isActive()){
-                    LogLog.debug("reconnect : rpc is actived.");
-                    return ;
-                }
-                LogLog.warn("close... rpcClient " + rpcClient);
-                rpcClient.close();
-            }
-        }catch (Exception e){
-            LogLog.error("close rpcClient Error:", e);
+    Lock connectLock = new ReentrantLock();
+    AtomicInteger rpcCloseErrorTimes = new AtomicInteger(0);
+    private void reconnect() throws Exception {
+        if (rpcClient!=null && rpcClient.isActive()) {
+            LogLog.warn("reconnect: rpcClient#" + rpcReconnectTimes.get() + " is already connected.");
+            return ;
         }
-        rpcClient = null;
         try {
-            rpcClient = RpcClientFactory.getInstance(props);
-            LogLog.warn("connected to " + hostname + ":" + port + " rpcClient:"  + Integer.toHexString(rpcClient.hashCode()));
-        } catch (FlumeException e) {
-            String errormsg = "RPC client creation failed! " + e.getMessage();
-            LogLog.error(errormsg);
-            if (unsafeMode) {
-                return;
+            connectLock.tryLock(timeout, TimeUnit.MICROSECONDS);
+            try {
+                if (rpcClient != null) {
+                    LogLog.warn("close... rpcClient#" + rpcReconnectTimes.get());
+                    rpcClient.close();
+                }
+            } catch (Exception e) {
+                LogLog.error("", e);
+                if(rpcCloseErrorTimes.incrementAndGet() >= 3){
+                    LogLog.error("force close rpcClient#"+  rpcReconnectTimes.get() +" after 3 times try close rpcClient error.");
+                    rpcCloseErrorTimes.set(0);
+                    rpcClient = null;
+                }
             }
-            throw e;
+            try {
+                rpcClient = RpcClientFactory.getInstance(props);
+                long reconnectTimes = rpcReconnectTimes.incrementAndGet();
+                LogLog.warn("connected to " + hostname + ":" + port + " rpcClient#" + reconnectTimes);
+            } catch (FlumeException e) {
+                String errorMsg = "RPC client creation failed! " + e.getMessage();
+                LogLog.error(errorMsg);
+            } catch (Exception e) {
+                LogLog.error("", e);
+            }
+            connectLock.unlock();
+        }catch (InterruptedException e){
+            LogLog.error("", e);
         }
     }
 
     Lock lock = new ReentrantLock();
+
     void fireConnector() {
         if(connector != null) {
-            synchronized (reconnectObject) {
-                reconnectObject.notifyAll();
-            }
             return;
         }
         lock.lock();
@@ -347,34 +378,27 @@ public class FlumeAppender extends AppenderSkeleton {
         lock.unlock();
     }
 
-    volatile Object reconnectObject = new Object();
     class Connector extends Thread {
         private volatile boolean interrupt = false;
+        private volatile boolean connecting = false;
         public void run() {
-            while (true) {
+            while (!interrupt) {
                 try {
-                    synchronized (reconnectObject) {
-                        if (rpcClient!=null && rpcClient.isActive()) {
-                            reconnectObject.wait(30000);
-                        }
-                        LogLog.debug("Attempting connecting to " + hostname + ":" + port);
-                        reconnect();
-                        if (rpcClient!=null && rpcClient.isActive()) {
-                            reconnectObject.wait(30000);
-                        }
-                    }
-                } catch (Exception e) {
-                    LogLog.debug("Remote host " + hostname + " refused connection.");
-                }
-                try{
-                    if(interrupt)
-                        return;
                     sleep(reconnectionDelay);
+                    if (rpcClient!=null && rpcClient.isActive()) {
+                        continue;
+                    }
+                    connecting = true;
+                    LogLog.debug("Attempting connecting to " + hostname + ":" + port);
+                    FlumeAppender.this.reconnect();
                 }catch (InterruptedException e) {
                     LogLog.warn("Connector interrupted. Leaving loop.");
                     connector = null;
-                    return;
+                    break;
+                } catch (Exception e) {
+                    LogLog.error("Remote host " + hostname + " ", e);
                 }
+                connecting = false;
             }
         }
     }

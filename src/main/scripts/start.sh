@@ -1,5 +1,5 @@
 #!/bin/sh
-
+# set ff=unix
 # Better OS/400 detection: see Bugzilla 31132
 os400=false
 case "`uname`" in
@@ -21,15 +21,17 @@ done
 PRGDIR=`dirname "$PRG"`
 PRGDIR=`dirname "$PRGDIR"`
 EXECUTABLE=${project.artifactId}.jar
+THIS_DIR=`pwd`
 
+echo $THIS_DIR
 echo $PRGDIR
-
-export PATH=$PRGDIR:$PATH
-
+#export PATH=$PRGDIR:$PATH
+cd $PRGDIR
 bin/daemon java -jar ./$EXECUTABLE start -n ${project.name} -f ./conf/log4j.xml -p 4562 $@
+ps aux | grep log4j
+cd $THIS_DIR
 
 #bin/su daemon -c $PRGDIR"/bin/daemon java -jar /"$EXECUTABLE" start -n gozap -f ./conf/log4j.xml -p 4562 "$@""
 
-#java -jar ./$EXECUTABLE start -n gozap -f conf/log4j.xml -p 4562
 
 

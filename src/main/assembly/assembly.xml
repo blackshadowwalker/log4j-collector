@@ -31,9 +31,17 @@
             <directory>target/classes/</directory>
             <outputDirectory>/bin</outputDirectory>
             <includes>
-                <include>*.sh</include>
                 <include>*.bat</include>
-                <include>daemon</include>
+                <include>*.c</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <fileMode>0755</fileMode>
+            <directory>target/classes/</directory>
+            <outputDirectory>/bin</outputDirectory>
+            <lineEnding>unix</lineEnding>
+            <includes>
+                <include>*.sh</include>
             </includes>
         </fileSet>
         <fileSet>
@@ -45,6 +53,7 @@
             </includes>
         </fileSet>
         <fileSet>
+            <fileMode>0400</fileMode>
             <directory>target/classes/</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
