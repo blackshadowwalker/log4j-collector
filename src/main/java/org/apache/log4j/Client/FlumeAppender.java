@@ -14,18 +14,16 @@ import org.apache.flume.FlumeException;
 import org.apache.flume.api.RpcClient;
 import org.apache.flume.api.RpcClientConfigurationConstants;
 import org.apache.flume.api.RpcClientFactory;
-import org.apache.flume.api.ThriftRpcClient;
 import org.apache.flume.clients.log4jappender.Log4jAvroHeaders;
 import org.apache.flume.event.EventBuilder;
 import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Layout;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -101,7 +99,7 @@ public class FlumeAppender extends AppenderSkeleton {
     @Override
     public synchronized void append(LoggingEvent event) throws FlumeException{
         if (connector!=null && connector.connecting){
-            LogLog.debug("rpcClient#" + rpcReconnectTimes.get() + " is connecting.");
+            //LogLog.debug("rpcClient#" + rpcReconnectTimes.get() + " is connecting.");
             return ;
         }
         //client created first time append is called.
@@ -125,6 +123,7 @@ public class FlumeAppender extends AppenderSkeleton {
 
         Event flumeEvent;
         Object message = event.getMessage();
+
         if (message instanceof GenericRecord) {
             GenericRecord record = (GenericRecord) message;
             populateAvroHeaders(hdrs, record.getSchema(), message);
@@ -135,7 +134,18 @@ public class FlumeAppender extends AppenderSkeleton {
             flumeEvent = EventBuilder.withBody(serialize(message, schema), hdrs);
         } else {
             hdrs.put(Log4jAvroHeaders.MESSAGE_ENCODING.toString(), "UTF8");
-            String msg = layout != null ? layout.format(event) : message.toString();
+            StringBuffer msgBuffer = new StringBuffer(1024);
+            msgBuffer.append(layout != null ? layout.format(event) : message.toString());
+            if(layout.ignoresThrowable()) {
+                String[] s = event.getThrowableStrRep();
+                if (s != null) {
+                    int len = s.length;
+                    for(int i = 0; i < len; i++) {
+                        msgBuffer.append(s[i]).append(Layout.LINE_SEP);
+                    }
+                }
+            }
+            String msg = msgBuffer.toString();
             flumeEvent = EventBuilder.withBody(msg, Charset.forName("UTF8"), hdrs);
         }
 
@@ -146,6 +156,7 @@ public class FlumeAppender extends AppenderSkeleton {
                 fireConnector();
             }
         } catch (EventDeliveryException e) {
+//            LogLog.error("rpcClient.append EventDeliveryException", e);
             LogLog.warn("rpcClient#" + rpcReconnectTimes.get() + " Detected problem with EventDeliveryException: " + e.getMessage() + "--" + e.getCause() );
             fireConnector();
             if (unsafeMode) {

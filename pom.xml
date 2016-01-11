@@ -22,7 +22,7 @@
         <docker.host>http://172.16.0.14:2375</docker.host>
         <docker.image.repo>${docker.registry}/${jobname}</docker.image.repo>
         <docker.image.tag>${project.version}</docker.image.tag>
-        <flume.host>172.16.0.17</flume.host>
+        <flume.host>172.16.0.19</flume.host>
         <flume.port>1234</flume.port>
     </properties>
 
@@ -308,6 +308,16 @@
         <dependency>
             <groupId>org.apache.flume.flume-ng-clients</groupId>
             <artifactId>flume-ng-log4jappender</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flume</groupId>
+            <artifactId>flume-ng-node</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flume.flume-ng-sinks</groupId>
+            <artifactId>flume-ng-elasticsearch-sink</artifactId>
             <version>1.6.0</version>
         </dependency>
     </dependencies>

@@ -24,6 +24,7 @@
         <appender-ref ref="flume"/>
     </appender>
     <appender name="flume" class="org.apache.log4j.client.FlumeAppender">
+        <param name="threshold" value="DEBUG"/>
         <param name="application" value="${project.name}"/>
         <param name="hostname" value="${flume.host}" />
         <param name="port" value="${flume.port}" />
