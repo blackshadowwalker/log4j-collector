@@ -65,7 +65,7 @@ public class Log4jClient implements Runnable {
                     loggerApp.callAppenders(event);
                 }
                 Logger logger = Logger.getRootLogger().getLoggerRepository().getLogger(event.getLoggerName());
-                if (logger != null && logger.aai!=null) {
+                if (logger != null) {
                     logger.callAppenders(event);
                 }
                 log.callAppenders(event);

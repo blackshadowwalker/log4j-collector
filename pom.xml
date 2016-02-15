@@ -310,16 +310,21 @@
             <artifactId>flume-ng-log4jappender</artifactId>
             <version>1.6.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.flume</groupId>
-            <artifactId>flume-ng-node</artifactId>
-            <version>1.6.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flume.flume-ng-sinks</groupId>
-            <artifactId>flume-ng-elasticsearch-sink</artifactId>
-            <version>1.6.0</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.apache.flume</groupId>-->
+            <!--<artifactId>flume-ng-node</artifactId>-->
+            <!--<version>1.6.0</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.apache.flume.flume-ng-sinks</groupId>-->
+            <!--<artifactId>flume-ng-elasticsearch-sink</artifactId>-->
+            <!--<version>1.6.0</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.elasticsearch</groupId>-->
+            <!--<artifactId>elasticsearch</artifactId>-->
+            <!--<version>1.6.0</version>-->
+        <!--</dependency>-->
     </dependencies>
 
     <distributionManagement>
