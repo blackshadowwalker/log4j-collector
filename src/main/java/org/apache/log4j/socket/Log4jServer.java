@@ -53,6 +53,7 @@ public class Log4jServer implements Log4jServerMBean {
         }
         if(file.exists()){
             LogLog.debug("loading log4j conf " + file.getAbsolutePath());
+            System.out.println("loading log4j conf " + file.getAbsolutePath());
             String log4jConf = file.getName();
             if(log4jConf.endsWith(".xml")){
                 DOMConfigurator.configureAndWatch(file.getAbsolutePath(), 60);
